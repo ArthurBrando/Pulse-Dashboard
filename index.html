@@ -24,6 +24,7 @@ header h1{font-size:1rem;font-weight:700;flex:1;}
 .card{background:#fff;border:1px solid var(--gold-light);border-radius:var(--r);box-shadow:var(--sh);padding:16px;display:flex;flex-direction:column;gap:10px;}
 .card.pending{border-color:var(--gold);}
 .card.approved{border-color:var(--online);}
+.card.revoked{border-color:#f3c6c6;opacity:.75;}
 .card.ignored{border-color:#f3c6c6;opacity:.75;}
 .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
 .nick{font-weight:700;font-size:1rem;}
@@ -38,6 +39,9 @@ header h1{font-size:1rem;font-weight:700;flex:1;}
 .btn{padding:10px 14px;border-radius:10px;border:none;font-family:inherit;font-weight:700;font-size:.8rem;cursor:pointer;transition:.2s;}
 .btn:active{transform:scale(.97);}
 .btn-approve{background:var(--pastel-green);color:#245c27;}
+.btn-revoke{background:#fde4e4;color:#b04040;}
+.badge.revoked{background:#fde4e4;color:#b04040;border:1px solid #f3c6c6;}
+.badge.revoke{background:#fff0e0;color:#a35a00;border:1px solid #e8a023;}
 .btn-ignore{background:#fde4e4;color:#b04040;}
 .btn:disabled{opacity:.5;cursor:not-allowed;}
 .empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:.9rem;padding:40px;}
@@ -73,6 +77,7 @@ header h1{font-size:1rem;font-weight:700;flex:1;}
     <button class="filter active" data-filter="pending">Pendentes</button>
     <button class="filter" data-filter="approved">Aprovados</button>
     <button class="filter" data-filter="ignored">Ignorados</button>
+    <button class="filter" data-filter="revoked">Revogados</button>
     <button class="filter" data-filter="all">Todos</button>
   </div>
   <div class="container" id="requests"></div>
@@ -170,7 +175,7 @@ function render(){
     card.innerHTML = `
       <div class="card-head">
         <span class="nick">${escapeHTML(r.nick || 'Anônimo')}</span>
-        <span class="badge ${status}">${status}</span>
+        <span class="badge ${status}">${status}</span>${r.type === 'revoke' ? '<span class="badge revoke">revogação</span>' : ''}
       </div>
       <div class="meta">
         <span>Nome do pagador: <b>${escapeHTML(r.buyerName || '—')}</b></span>
@@ -180,18 +185,22 @@ function render(){
       </div>
       ${r.proofUrl ? `<img class="proof" src="${r.proofUrl}" alt="Comprovante" onclick="window.open(this.src,'_blank')">` : '<div class="meta">Sem comprovante</div>'}
       <div class="actions">
-        <button class="btn btn-approve" ${status !== 'pending' ? 'disabled' : ''} data-action="approve">Aprovar</button>
+        <button class="btn btn-approve" ${status !== 'pending' ? 'disabled' : ''} data-action="approve">${r.type === 'revoke' ? 'Aprovar revogação' : 'Aprovar'}</button>
         <button class="btn btn-ignore" ${status !== 'pending' ? 'disabled' : ''} data-action="ignore">Ignorar</button>
+        ${(status === 'approved' && r.type !== 'revoke') ? '<button class="btn btn-revoke" data-action="revoke">Revogar PULSE</button>' : ''}
       </div>
     `;
 
     card.querySelector('[data-action="approve"]').addEventListener('click', () => approve(r));
     card.querySelector('[data-action="ignore"]').addEventListener('click', () => ignore(r));
+    const rb = card.querySelector('[data-action="revoke"]');
+    if (rb) rb.addEventListener('click', () => revoke(r));
     container.appendChild(card);
   });
 }
 
 async function approve(r){
+  if (r.type === 'revoke') return revoke(r, true);
   if (!confirm(`Aprovar PULSE para ${r.nick || r.uid}?`)) return;
   try {
     const updates = {};
@@ -207,13 +216,28 @@ async function approve(r){
   }
 }
 
+async function revoke(r, fromRequest){
+  if (!confirm(`Revogar o PULSE de ${r.nick || r.uid}?`)) return;
+  try {
+    const updates = {};
+    updates[`pulse_requests/${r.key}/status`] = fromRequest ? 'approved' : 'revoked';
+    updates[`pulse_requests/${r.key}/reviewedAt`] = Date.now();
+    updates[`users/${r.uid}/plan`] = 'free';
+    updates[`users/${r.uid}/planSince`] = null;
+    updates[`users/${r.uid}/revokePending`] = false;
+    await update(ref(db), updates);
+    showToast("PULSE revogado de " + (r.nick || r.uid));
+  } catch (err) { showToast("Erro ao revogar: " + err.message); }
+}
+
 async function ignore(r){
   if (!confirm(`Ignorar o pedido de ${r.nick || r.uid}?`)) return;
   try {
     const updates = {};
     updates[`pulse_requests/${r.key}/status`] = 'ignored';
     updates[`pulse_requests/${r.key}/reviewedAt`] = Date.now();
-    updates[`users/${r.uid}/pulsePending`] = false;
+    if (r.type === 'revoke') updates[`users/${r.uid}/revokePending`] = false;
+    else updates[`users/${r.uid}/pulsePending`] = false;
     await update(ref(db), updates);
     showToast("Pedido ignorado");
   } catch (err) {
