@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
-<title>HEZZ • Dashboard PULSE</title>
+<title>HEZZ • Dashboard Admin</title>
+<link rel="icon" href="foto.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,42 +14,52 @@
   --text:#2b2b2b;--text-soft:#6a6a6a;--muted:#9a9a9a;--danger:#e26a6a;--online:#7bc47f;--r:14px;--sh:0 8px 24px rgba(0,0,0,.08);}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(135deg,var(--pastel-blue),#fff 45%,var(--gold-soft));min-height:100vh;color:var(--text);}
-header{display:flex;align-items:center;gap:14px;padding:20px 24px;border-bottom:1px solid var(--gold-light);background:rgba(255,255,255,.85);backdrop-filter:blur(8px);position:sticky;top:0;z-index:10;}
-.logo{font-weight:800;letter-spacing:3px;color:var(--gold);font-size:1.3rem;}
+header{display:flex;align-items:center;gap:14px;padding:16px 24px;border-bottom:1px solid var(--gold-light);background:rgba(255,255,255,.9);backdrop-filter:blur(8px);position:sticky;top:0;z-index:20;flex-wrap:wrap;}
+.logo-img{width:32px;height:32px;border-radius:8px;object-fit:cover;}
+.logo{font-weight:800;letter-spacing:3px;color:var(--gold);font-size:1.25rem;}
 header h1{font-size:1rem;font-weight:700;flex:1;}
 #auth-status{font-size:.75rem;color:var(--text-soft);}
 #btn-logout{display:none;padding:6px 12px;border-radius:8px;border:1px solid var(--gold-light);background:#fff;font-family:inherit;font-size:.75rem;font-weight:600;cursor:pointer;color:var(--text);}
+.main-tabs{display:flex;gap:8px;padding:14px 24px;background:#fff;border-bottom:1px solid var(--gold-light);flex-wrap:wrap;}
+.main-tab{padding:10px 18px;border-radius:10px;border:1px solid var(--gold-light);background:var(--gold-soft);font-weight:700;font-size:.85rem;cursor:pointer;color:var(--text);}
+.main-tab.active{background:var(--gold);color:#fff;border-color:var(--gold);}
 .filters{display:flex;gap:8px;padding:16px 24px;overflow-x:auto;align-items:center;flex-wrap:wrap;}
 .filter{padding:8px 14px;border-radius:999px;border:none;background:var(--gold-soft);font-weight:600;font-size:.8rem;cursor:pointer;white-space:nowrap;}
 .filter.active{background:var(--gold);color:#fff;}
 .revoke-bar{display:flex;gap:8px;padding:0 24px 16px;max-width:520px;}
 .revoke-bar input{flex:1;padding:10px 12px;border:2px solid var(--gold-light);border-radius:10px;font-family:inherit;font-size:.82rem;outline:none;background:#fff;}
 .revoke-bar input:focus{border-color:var(--gold);background:var(--gold-soft);}
-.container{padding:0 24px 40px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;max-width:1400px;margin:0 auto;}
+.container{padding:0 24px 40px;display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px;max-width:1400px;margin:0 auto;}
 .card{background:#fff;border:1px solid var(--gold-light);border-radius:var(--r);box-shadow:var(--sh);padding:16px;display:flex;flex-direction:column;gap:10px;}
 .card.pending{border-color:var(--gold);}
-.card.approved{border-color:var(--online);}
-.card.ignored,.card.revoked{border-color:#f3c6c6;opacity:.8;}
+.card.approved,.card.resolved{border-color:var(--online);}
+.card.ignored,.card.revoked{border-color:#f3c6c6;opacity:.85;}
 .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.user-row{display:flex;align-items:center;gap:10px;}
+.u-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid var(--gold-light);background:var(--pastel-blue);}
 .nick{font-weight:700;font-size:1rem;}
 .badges{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
 .badge{font-size:.65rem;font-weight:800;padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.5px;}
 .badge.pending{background:var(--gold-soft);color:#a37c00;border:1px solid var(--gold);}
-.badge.approved{background:#e8f6e8;color:#2f7d32;border:1px solid var(--online);}
+.badge.approved,.badge.resolved{background:#e8f6e8;color:#2f7d32;border:1px solid var(--online);}
 .badge.ignored,.badge.revoked,.badge.type-revoke{background:#fde4e4;color:#b04040;border:1px solid #f3c6c6;}
 .badge.type-sub{background:#eef4fb;color:#2c5282;border:1px solid #cbdcf0;}
-.meta{font-size:.78rem;color:var(--text-soft);display:flex;flex-direction:column;gap:4px;word-break:break-all;}
+.meta{font-size:.78rem;color:var(--text-soft);display:flex;flex-direction:column;gap:4px;word-break:break-word;}
 .meta b{color:var(--text);}
 .proof{max-width:100%;max-height:260px;object-fit:contain;border-radius:10px;border:1px solid var(--gold-light);cursor:zoom-in;background:var(--gold-soft);}
 .actions{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;}
-.btn{padding:10px 14px;border-radius:10px;border:none;font-family:inherit;font-weight:700;font-size:.8rem;cursor:pointer;transition:.2s;}
+.btn{padding:9px 13px;border-radius:10px;border:none;font-family:inherit;font-weight:700;font-size:.78rem;cursor:pointer;transition:.2s;}
 .btn:active{transform:scale(.97);}
 .btn-approve{background:var(--pastel-green);color:#245c27;}
 .btn-ignore{background:#fde4e4;color:#b04040;}
 .btn-revoke{background:#e26a6a;color:#fff;}
+.btn-warn1{background:#fff3cd;color:#856404;border:1px solid #ffeeba;}
+.btn-warn2{background:#ffe0b2;color:#b35100;border:1px solid #ffcc80;}
+.btn-view{background:var(--pastel-blue);color:#2c5282;}
+.btn-gold{background:var(--gold);color:#fff;}
 .btn:disabled{opacity:.5;cursor:not-allowed;}
 .empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:.9rem;padding:40px;}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:12px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:.3s;font-size:.85rem;z-index:100;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:12px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:.3s;font-size:.85rem;z-index:200;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 #login-screen{max-width:360px;margin:80px auto;background:#fff;border:1px solid var(--gold-light);border-radius:var(--r);box-shadow:var(--sh);padding:24px;display:flex;flex-direction:column;gap:12px;}
 #login-screen h2{font-size:1.1rem;text-align:center;}
@@ -57,13 +68,24 @@ header h1{font-size:1rem;font-weight:700;flex:1;}
 #login-screen button{padding:12px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-weight:700;cursor:pointer;}
 #login-screen .err{font-size:.75rem;color:var(--danger);text-align:center;min-height:1em;}
 #app{display:none;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+.reply-row{display:flex;gap:8px;margin-top:4px;}
+.reply-row textarea{flex:1;padding:8px 10px;border:2px solid var(--gold-light);border-radius:10px;font-family:inherit;font-size:.8rem;resize:vertical;min-height:42px;outline:none;}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;place-items:center;z-index:100;padding:20px;}
+.modal-bg.show{display:grid;}
+.modal{background:#fff;border-radius:16px;max-width:440px;width:100%;overflow:hidden;box-shadow:var(--sh);border:1px solid var(--gold-light);}
+.modal-banner{height:120px;background:var(--pastel-blue);background-size:cover;background-position:center;position:relative;}
+.modal-avatar{width:76px;height:76px;border-radius:50%;border:4px solid #fff;object-fit:cover;position:absolute;bottom:-38px;left:20px;background:#fff;}
+.modal-body{padding:46px 20px 20px;display:flex;flex-direction:column;gap:10px;}
 </style>
 </head>
 <body>
 
 <header>
+  <img src="foto.png" class="logo-img" alt="HEZZ" onerror="this.style.display='none'">
   <span class="logo">HEZZ</span>
-  <h1>Dashboard PULSE</h1>
+  <h1>Dashboard Admin</h1>
   <span id="auth-status">Desconectado</span>
   <button id="btn-logout">Sair</button>
 </header>
@@ -77,20 +99,72 @@ header h1{font-size:1rem;font-weight:700;flex:1;}
 </div>
 
 <div id="app">
-  <div class="filters" id="filters">
-    <button class="filter active" data-filter="pending">Pendentes</button>
-    <button class="filter" data-filter="approved">Aprovados</button>
-    <button class="filter" data-filter="revoked">Revogados</button>
-    <button class="filter" data-filter="ignored">Ignorados</button>
-    <button class="filter" data-filter="all">Todos</button>
+  <div class="main-tabs">
+    <button class="main-tab active" data-panel="pulse">Pedidos PULSE</button>
+    <button class="main-tab" data-panel="reports">Denúncias</button>
+    <button class="main-tab" data-panel="support">Suporte (Hezz Bot)</button>
   </div>
 
-  <div class="revoke-bar">
-    <input id="revoke-uid-input" type="text" placeholder="Revogar PULSE diretamente por ID do usuário (UID)">
-    <button class="btn btn-revoke" id="btn-revoke-uid">Revogar por ID</button>
+  <!-- PAINEL PULSE -->
+  <div class="tab-panel active" id="panel-pulse">
+    <div class="filters" id="filters">
+      <button class="filter active" data-filter="pending">Pendentes</button>
+      <button class="filter" data-filter="approved">Aprovados</button>
+      <button class="filter" data-filter="revoked">Revogados</button>
+      <button class="filter" data-filter="ignored">Ignorados</button>
+      <button class="filter" data-filter="all">Todos</button>
+    </div>
+
+    <div class="revoke-bar">
+      <input id="revoke-uid-input" type="text" placeholder="Revogar PULSE diretamente por ID do usuário (UID)">
+      <button class="btn btn-revoke" id="btn-revoke-uid">Revogar por ID</button>
+    </div>
+
+    <div class="container" id="requests"></div>
   </div>
 
-  <div class="container" id="requests"></div>
+  <!-- PAINEL DENÚNCIAS -->
+  <div class="tab-panel" id="panel-reports">
+    <div class="filters" id="report-filters">
+      <button class="filter active" data-filter="pending">Pendentes</button>
+      <button class="filter" data-filter="resolved">Resolvidas</button>
+      <button class="filter" data-filter="ignored">Ignoradas</button>
+      <button class="filter" data-filter="all">Todas</button>
+    </div>
+    <div class="container" id="reports-list"></div>
+  </div>
+
+  <!-- PAINEL SUPORTE -->
+  <div class="tab-panel" id="panel-support">
+    <div class="filters" id="support-filters">
+      <button class="filter active" data-filter="pending">Abertos</button>
+      <button class="filter" data-filter="resolved">Resolvidos</button>
+      <button class="filter" data-filter="all">Todos</button>
+    </div>
+    <div class="container" id="support-list"></div>
+  </div>
+</div>
+
+<!-- MODAL VISUALIZAR PERFIL -->
+<div class="modal-bg" id="profile-modal">
+  <div class="modal">
+    <div class="modal-banner" id="pm-banner">
+      <img class="modal-avatar" id="pm-avatar" src="">
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 id="pm-nick">—</h3>
+        <span class="badge type-sub" id="pm-age">—</span>
+      </div>
+      <div class="meta">
+        <span>ID: <b id="pm-uid">—</b></span>
+        <span>Plano: <b id="pm-plan">—</b> • Strikes: <b id="pm-strikes">0</b> • Banido: <b id="pm-banned">Não</b></span>
+        <span>Bio: <b id="pm-bio">—</b></span>
+      </div>
+      <div class="actions" id="pm-actions"></div>
+      <button class="btn btn-ignore" onclick="document.getElementById('profile-modal').classList.remove('show')">Fechar</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -98,7 +172,7 @@ header h1{font-size:1rem;font-weight:700;flex:1;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, onValue, update, get, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBk0TzSvq4T4f27RbCUtHblQxvmkAI0dHE",
@@ -115,70 +189,107 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 
 const $ = (id) => document.getElementById(id);
+const DEFAULT_AVATAR = "foto.png";
 let allRequests = [];
+let allReports = [];
+let allSupport = [];
 let currentFilter = 'pending';
+let currentReportFilter = 'pending';
+let currentSupportFilter = 'pending';
 let toastTimer = null;
-let reqUnsub = null;
+let unsubs = [];
 
 function showToast(msg){
   $("toast").textContent = msg;
   $("toast").classList.add("show");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => $("toast").classList.remove("show"), 2500);
+  toastTimer = setTimeout(() => $("toast").classList.remove("show"), 2600);
+}
+
+function escapeHTML(str){
+  return String(str ?? '').replace(/[&<>'"]/g, t => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'
+  }[t]));
+}
+
+function dmPairId(a, b){ return [a, b].sort().join('_'); }
+
+async function sendHezzBotDm(targetUid, text){
+  const pairId = dmPairId(targetUid, 'hezz_bot');
+  await push(ref(db, `dms/${pairId}/messages`), {
+    type: 'text',
+    text,
+    senderUid: 'hezz_bot',
+    senderNick: 'Hezz Bot',
+    senderAvatar: 'foto.png',
+    timestamp: Date.now()
+  });
 }
 
 $("btn-login").addEventListener("click", async () => {
   const email = $("admin-email").value.trim();
   const pass  = $("admin-pass").value;
   $("login-err").textContent = "";
-  try {
-    await signInWithEmailAndPassword(auth, email, pass);
-  } catch (err) {
-    $("login-err").textContent = err.code || err.message;
-  }
+  try { await signInWithEmailAndPassword(auth, email, pass); }
+  catch (err) { $("login-err").textContent = err.code || err.message; }
 });
-
 $("btn-logout").addEventListener("click", () => signOut(auth));
 
+document.querySelectorAll('.main-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    $('panel-' + btn.dataset.panel).classList.add('active');
+  });
+});
+
 onAuthStateChanged(auth, user => {
+  unsubs.forEach(u => u()); unsubs = [];
   if (user) {
     $("login-screen").style.display = "none";
     $("app").style.display = "block";
     $("btn-logout").style.display = "inline-block";
     $("auth-status").textContent = "Conectado: " + (user.email || user.uid);
-    subscribeRequests();
+    subscribeAll();
   } else {
     $("login-screen").style.display = "flex";
     $("app").style.display = "none";
     $("btn-logout").style.display = "none";
     $("auth-status").textContent = "Desconectado";
-    if (reqUnsub) { reqUnsub(); reqUnsub = null; }
   }
 });
 
-function subscribeRequests(){
-  if (reqUnsub) reqUnsub();
-  reqUnsub = onValue(ref(db, "pulse_requests"), snap => {
+function subscribeAll(){
+  unsubs.push(onValue(ref(db, "pulse_requests"), snap => {
     const val = snap.val() || {};
     allRequests = Object.entries(val).map(([key, v]) => ({ key, ...v }))
       .sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
-    render();
-  }, err => {
-    $("auth-status").textContent = "Erro: " + err.message;
-  });
+    renderRequests();
+  }, err => { $("auth-status").textContent = "Erro: " + err.message; }));
+
+  unsubs.push(onValue(ref(db, "reports"), snap => {
+    const val = snap.val() || {};
+    allReports = Object.entries(val).map(([key, v]) => ({ key, ...v }))
+      .sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+    renderReports();
+  }));
+
+  unsubs.push(onValue(ref(db, "support_tickets"), snap => {
+    const val = snap.val() || {};
+    allSupport = Object.entries(val).map(([key, v]) => ({ key, ...v }))
+      .sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+    renderSupport();
+  }));
 }
 
-function render(){
+/* ===== PULSE ===== */
+function renderRequests(){
   const container = $("requests");
   container.innerHTML = "";
-
   const list = (currentFilter === 'all') ? allRequests
     : allRequests.filter(r => (r.status || 'pending') === currentFilter);
-
-  if (!list.length) {
-    container.innerHTML = '<div class="empty">Nenhum pedido nesta categoria.</div>';
-    return;
-  }
+  if (!list.length) { container.innerHTML = '<div class="empty">Nenhum pedido nesta categoria.</div>'; return; }
 
   list.forEach(r => {
     const status = r.status || 'pending';
@@ -186,28 +297,17 @@ function render(){
     const card = document.createElement('div');
     card.className = 'card ' + status;
     const date = r.createdAt ? new Date(r.createdAt).toLocaleString() : '—';
-
-    const statusLabel = {
-      pending: 'Pendente',
-      approved: 'Aprovado',
-      revoked: 'Revogado',
-      ignored: 'Ignorado'
-    }[status] || status;
-
+    const statusLabel = { pending:'Pendente', approved:'Aprovado', revoked:'Revogado', ignored:'Ignorado' }[status] || status;
     let actionsHtml = '';
     if (status === 'pending') {
       actionsHtml = `
         <button class="btn ${isRevokeReq ? 'btn-revoke' : 'btn-approve'}" data-action="approve">
           ${isRevokeReq ? 'Confirmar Revogação' : 'Aprovar'}
         </button>
-        <button class="btn btn-ignore" data-action="ignore">Ignorar</button>
-      `;
+        <button class="btn btn-ignore" data-action="ignore">Ignorar</button>`;
     } else if (status === 'approved' && !isRevokeReq) {
-      actionsHtml = `
-        <button class="btn btn-revoke" data-action="revoke">Revogar assinatura</button>
-      `;
+      actionsHtml = `<button class="btn btn-revoke" data-action="revoke">Revogar assinatura</button>`;
     }
-
     card.innerHTML = `
       <div class="card-head">
         <span class="nick">${escapeHTML(r.nick || 'Anônimo')}</span>
@@ -223,16 +323,13 @@ function render(){
         <span>Data: <b>${date}</b></span>
       </div>
       ${!isRevokeReq ? (r.proofUrl ? `<img class="proof" src="${r.proofUrl}" alt="Comprovante" onclick="window.open(this.src,'_blank')">` : '<div class="meta">Sem comprovante</div>') : ''}
-      ${actionsHtml ? `<div class="actions">${actionsHtml}</div>` : ''}
-    `;
-
+      ${actionsHtml ? `<div class="actions">${actionsHtml}</div>` : ''}`;
     const appBtn = card.querySelector('[data-action="approve"]');
     const ignBtn = card.querySelector('[data-action="ignore"]');
     const revBtn = card.querySelector('[data-action="revoke"]');
     if (appBtn) appBtn.addEventListener('click', () => isRevokeReq ? approveRevokeRequest(r) : approve(r));
     if (ignBtn) ignBtn.addEventListener('click', () => ignore(r));
     if (revBtn) revBtn.addEventListener('click', () => revokeSubscription(r));
-
     container.appendChild(card);
   });
 }
@@ -248,10 +345,9 @@ async function approve(r){
     updates[`users/${r.uid}/pulsePending`] = false;
     updates[`users/${r.uid}/revokePending`] = false;
     await update(ref(db), updates);
-    showToast("PULSE aprovado para " + (r.nick || r.uid));
-  } catch (err) {
-    showToast("Erro ao aprovar: " + err.message);
-  }
+    await sendHezzBotDm(r.uid, "✨ Sua assinatura **HEZZ PULSE** foi aprovada! Aproveite todos os benefícios.");
+    showToast("PULSE aprovado!");
+  } catch (err) { showToast("Erro: " + err.message); }
 }
 
 async function approveRevokeRequest(r){
@@ -272,10 +368,8 @@ async function approveRevokeRequest(r){
     updates[`users/${r.uid}/pulsePending`] = false;
     updates[`users/${r.uid}/revokePending`] = false;
     await update(ref(db), updates);
-    showToast("Assinatura revogada para " + (r.nick || r.uid));
-  } catch (err) {
-    showToast("Erro ao revogar: " + err.message);
-  }
+    showToast("Assinatura revogada!");
+  } catch (err) { showToast("Erro: " + err.message); }
 }
 
 async function revokeSubscription(r){
@@ -290,15 +384,13 @@ async function revokeSubscription(r){
     updates[`users/${r.uid}/pulsePending`] = false;
     updates[`users/${r.uid}/revokePending`] = false;
     await update(ref(db), updates);
-    showToast("Assinatura revogada para " + (r.nick || r.uid));
-  } catch (err) {
-    showToast("Erro ao revogar: " + err.message);
-  }
+    showToast("Assinatura revogada!");
+  } catch (err) { showToast("Erro: " + err.message); }
 }
 
 $("btn-revoke-uid").addEventListener("click", async () => {
   const uid = $("revoke-uid-input").value.trim();
-  if (!uid) { showToast("Informe o ID (UID) do usuário"); return; }
+  if (!uid) { showToast("Informe o UID"); return; }
   if (!confirm(`Revogar assinatura PULSE do usuário ${uid}?`)) return;
   try {
     const now = Date.now();
@@ -316,9 +408,7 @@ $("btn-revoke-uid").addEventListener("click", async () => {
     await update(ref(db), updates);
     $("revoke-uid-input").value = "";
     showToast("Assinatura PULSE revogada!");
-  } catch (err) {
-    showToast("Erro ao revogar: " + err.message);
-  }
+  } catch (err) { showToast("Erro: " + err.message); }
 });
 
 async function ignore(r){
@@ -331,15 +421,187 @@ async function ignore(r){
     else updates[`users/${r.uid}/pulsePending`] = false;
     await update(ref(db), updates);
     showToast("Pedido ignorado");
-  } catch (err) {
-    showToast("Erro ao ignorar: " + err.message);
-  }
+  } catch (err) { showToast("Erro: " + err.message); }
 }
 
-function escapeHTML(str){
-  return String(str ?? '').replace(/[&<>'"]/g, t => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'
-  }[t]));
+/* ===== DENÚNCIAS & STRIKES (1, 2, 3) ===== */
+async function applyStrike(uid, level, reportKey = null, reasonHint = ""){
+  const labels = {
+    1: "Alerta 1 (Aviso oficial na DM)",
+    2: "Punição 2 (Sem pesquisa de servidores, atraso em mensagens e bloqueio de calls)",
+    3: "Punição 3 (BANIMENTO COMPLETO da plataforma)"
+  };
+  if (!confirm(`Aplicar ${labels[level]} para o usuário ${uid}?`)) return;
+  try {
+    const updates = {};
+    updates[`users/${uid}/strikes`] = level;
+    updates[`users/${uid}/banned`] = (level >= 3);
+    updates[`users/${uid}/lastStrikeAt`] = Date.now();
+    if (reportKey) {
+      updates[`reports/${reportKey}/status`] = 'resolved';
+      updates[`reports/${reportKey}/action`] = `strike_${level}`;
+      updates[`reports/${reportKey}/reviewedAt`] = Date.now();
+    }
+    await update(ref(db), updates);
+
+    const msgs = {
+      1: `⚠️ **ALERTA DE MODERAÇÃO (Nível 1)**\nVocê recebeu um alerta por violar as diretrizes do HEZZ.${reasonHint ? "\nMotivo: " + reasonHint : ""}\nEvite novas infrações para não sofrer restrições.`,
+      2: `🚫 **RESTRIÇÃO DE CONTA (Nível 2)**\nSua conta recebeu uma punição de nível 2.${reasonHint ? "\nMotivo: " + reasonHint : ""}\nVocê perdeu acesso à pesquisa de servidores, ganhou atraso ao enviar mensagens e está impedido de entrar em calls.`,
+      3: `🔨 **CONTA BANIDA (Nível 3)**\nSua conta foi banida permanentemente da plataforma HEZZ por acumular infrações ou violação grave.${reasonHint ? "\nMotivo: " + reasonHint : ""}`
+    };
+    await sendHezzBotDm(uid, msgs[level]);
+    showToast(`Nível ${level} aplicado e enviado na DM via Hezz Bot!`);
+    $("profile-modal").classList.remove("show");
+  } catch (err) { showToast("Erro: " + err.message); }
+}
+
+async function clearUserPunishment(uid){
+  if (!confirm(`Remover punições/desbanir ${uid}?`)) return;
+  try {
+    await update(ref(db, `users/${uid}`), { strikes: 0, banned: false });
+    await sendHezzBotDm(uid, "✅ Sua conta teve as restrições removidas pela moderação do HEZZ.");
+    showToast("Punições removidas!");
+    $("profile-modal").classList.remove("show");
+  } catch (err) { showToast("Erro: " + err.message); }
+}
+
+async function openUserProfileModal(uid, reportKey = null, reason = ""){
+  try {
+    const snap = await get(ref(db, `users/${uid}`));
+    const u = snap.val() || {};
+    $("pm-banner").style.backgroundImage = u.bannerUrl ? `url("${u.bannerUrl}")` : "none";
+    $("pm-avatar").src = u.avatarUrl || DEFAULT_AVATAR;
+    $("pm-nick").textContent = u.nick || "Desconhecido";
+    $("pm-age").textContent = u.ageRating || "Não informado";
+    $("pm-uid").textContent = uid;
+    $("pm-plan").textContent = (u.plan || 'free').toUpperCase();
+    $("pm-strikes").textContent = u.strikes || 0;
+    $("pm-banned").textContent = u.banned ? "SIM" : "Não";
+    $("pm-bio").textContent = u.bio || "Sem bio";
+
+    const act = $("pm-actions");
+    act.innerHTML = "";
+    const b1 = document.createElement('button'); b1.className = 'btn btn-warn1'; b1.textContent = '1: Alerta DM';
+    b1.onclick = () => applyStrike(uid, 1, reportKey, reason);
+    const b2 = document.createElement('button'); b2.className = 'btn btn-warn2'; b2.textContent = '2: Restringir';
+    b2.onclick = () => applyStrike(uid, 2, reportKey, reason);
+    const b3 = document.createElement('button'); b3.className = 'btn btn-revoke'; b3.textContent = '3: Banir Plataforma';
+    b3.onclick = () => applyStrike(uid, 3, reportKey, reason);
+    const b0 = document.createElement('button'); b0.className = 'btn btn-approve'; b0.textContent = 'Limpar Strikes';
+    b0.onclick = () => clearUserPunishment(uid);
+    act.append(b1, b2, b3, b0);
+    $("profile-modal").classList.add("show");
+  } catch (err) { showToast("Erro ao carregar perfil: " + err.message); }
+}
+
+function renderReports(){
+  const container = $("reports-list");
+  container.innerHTML = "";
+  const list = (currentReportFilter === 'all') ? allReports
+    : allReports.filter(r => (r.status || 'pending') === currentReportFilter);
+  if (!list.length) { container.innerHTML = '<div class="empty">Nenhuma denúncia nesta categoria.</div>'; return; }
+
+  list.forEach(r => {
+    const status = r.status || 'pending';
+    const card = document.createElement('div');
+    card.className = 'card ' + status;
+    const date = r.createdAt ? new Date(r.createdAt).toLocaleString() : '—';
+    const statusLabel = { pending:'Pendente', resolved:'Resolvida', ignored:'Ignorada' }[status] || status;
+
+    card.innerHTML = `
+      <div class="card-head">
+        <div class="user-row">
+          <img class="u-avatar" src="${r.targetAvatar || DEFAULT_AVATAR}" alt="">
+          <div>
+            <div class="nick">${escapeHTML(r.targetNick || 'Usuário')}</div>
+            <div style="font-size:.72rem;color:var(--text-soft);">ID: ${escapeHTML(r.targetUid || '—')}</div>
+          </div>
+        </div>
+        <span class="badge ${status}">${statusLabel}</span>
+      </div>
+      <div class="meta">
+        <span>Denunciado por: <b>${escapeHTML(r.reporterNick || 'Anônimo')}</b> (${escapeHTML(r.reporterUid || '—')})</span>
+        <span>Motivo: <b>${escapeHTML(r.reason || '—')}</b></span>
+        <span>Data: <b>${date}</b></span>
+      </div>
+      ${r.proofUrl ? `<img class="proof" src="${r.proofUrl}" alt="Print" onclick="window.open(this.src,'_blank')">` : '<div class="meta">Sem print anexado</div>'}
+      <div class="actions">
+        <button class="btn btn-view" data-act="view">Visualizar Perfil</button>
+        <button class="btn btn-warn1" data-act="s1">Alerta 1</button>
+        <button class="btn btn-warn2" data-act="s2">Punição 2</button>
+        <button class="btn btn-revoke" data-act="s3">Banir (3)</button>
+        ${status === 'pending' ? `<button class="btn btn-ignore" data-act="ign">Ignorar</button>` : ''}
+      </div>
+    `;
+
+    card.querySelector('[data-act="view"]').onclick = () => openUserProfileModal(r.targetUid, r.key, r.reason);
+    card.querySelector('[data-act="s1"]').onclick = () => applyStrike(r.targetUid, 1, r.key, r.reason);
+    card.querySelector('[data-act="s2"]').onclick = () => applyStrike(r.targetUid, 2, r.key, r.reason);
+    card.querySelector('[data-act="s3"]').onclick = () => applyStrike(r.targetUid, 3, r.key, r.reason);
+    const ign = card.querySelector('[data-act="ign"]');
+    if (ign) ign.onclick = async () => {
+      await update(ref(db, `reports/${r.key}`), { status: 'ignored', reviewedAt: Date.now() });
+      showToast("Denúncia ignorada");
+    };
+    container.appendChild(card);
+  });
+}
+
+/* ===== SUPORTE (HEZZ BOT) ===== */
+function renderSupport(){
+  const container = $("support-list");
+  container.innerHTML = "";
+  const list = (currentSupportFilter === 'all') ? allSupport
+    : allSupport.filter(t => (t.status || 'pending') === currentSupportFilter);
+  if (!list.length) { container.innerHTML = '<div class="empty">Nenhum ticket de suporte aqui.</div>'; return; }
+
+  list.forEach(t => {
+    const status = t.status || 'pending';
+    const card = document.createElement('div');
+    card.className = 'card ' + status;
+    const date = t.createdAt ? new Date(t.createdAt).toLocaleString() : '—';
+    card.innerHTML = `
+      <div class="card-head">
+        <div class="user-row">
+          <img class="u-avatar" src="${t.avatarUrl || DEFAULT_AVATAR}" alt="">
+          <div>
+            <div class="nick">${escapeHTML(t.nick || 'Usuário')}</div>
+            <div style="font-size:.72rem;color:var(--text-soft);">ID: ${escapeHTML(t.uid || '—')}</div>
+          </div>
+        </div>
+        <span class="badge ${status}">${status === 'resolved' ? 'Resolvido' : 'Aberto'}</span>
+      </div>
+      <div class="meta">
+        <span>Assunto: <b>${escapeHTML(t.subject || 'Suporte')}</b></span>
+        <span>Mensagem: <b>${escapeHTML(t.message || '—')}</b></span>
+        <span>Data: <b>${date}</b></span>
+      </div>
+      <div class="reply-row">
+        <textarea placeholder="Responder na DM via Hezz Bot..."></textarea>
+        <button class="btn btn-gold">Enviar</button>
+      </div>
+      <div class="actions">
+        ${status !== 'resolved' ? `<button class="btn btn-approve" data-act="resolve">Marcar como Resolvido</button>` : ''}
+      </div>
+    `;
+    const ta = card.querySelector('textarea');
+    card.querySelector('.btn-gold').onclick = async () => {
+      const txt = ta.value.trim();
+      if (!txt) return;
+      try {
+        await sendHezzBotDm(t.uid, `📩 **Resposta do Suporte HEZZ:**\n${txt}`);
+        await update(ref(db, `support_tickets/${t.key}`), { status: 'resolved', reply: txt, repliedAt: Date.now() });
+        ta.value = "";
+        showToast("Resposta enviada via Hezz Bot!");
+      } catch (err) { showToast("Erro: " + err.message); }
+    };
+    const resBtn = card.querySelector('[data-act="resolve"]');
+    if (resBtn) resBtn.onclick = async () => {
+      await update(ref(db, `support_tickets/${t.key}`), { status: 'resolved', resolvedAt: Date.now() });
+      showToast("Marcado como resolvido!");
+    };
+    container.appendChild(card);
+  });
 }
 
 document.querySelectorAll('#filters .filter').forEach(btn => {
@@ -347,7 +609,23 @@ document.querySelectorAll('#filters .filter').forEach(btn => {
     document.querySelectorAll('#filters .filter').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentFilter = btn.dataset.filter;
-    render();
+    renderRequests();
+  });
+});
+document.querySelectorAll('#report-filters .filter').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#report-filters .filter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentReportFilter = btn.dataset.filter;
+    renderReports();
+  });
+});
+document.querySelectorAll('#support-filters .filter').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#support-filters .filter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentSupportFilter = btn.dataset.filter;
+    renderSupport();
   });
 });
 </script>
