@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>HEZZ • Dashboard PULSE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --white:#fff; --gold:#e8b923; --gold-light:#fdeaa8; --gold-soft:#fffaeb;
+  --pastel-blue:#d6e4f0; --pastel-green:#d9ead3; --text:#2b2b2b; --text-soft:#6a6a6a;
+  --muted:#9a9a9a; --danger:#e26a6a; --online:#7bc47f;
+  --r:14px; --sh:0 8px 24px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(135deg,var(--pastel-blue),#fff 45%,var(--gold-soft));min-height:100vh;color:var(--text);}
+header{display:flex;align-items:center;gap:14px;padding:20px 24px;border-bottom:1px solid var(--gold-light);background:rgba(255,255,255,.85);backdrop-filter:blur(8px);position:sticky;top:0;z-index:10;}
+.logo{font-weight:800;letter-spacing:3px;color:var(--gold);font-size:1.3rem;}
+header h1{font-size:1rem;font-weight:700;flex:1;}
+#auth-status{font-size:.75rem;color:var(--text-soft);}
+.filters{display:flex;gap:8px;padding:16px 24px;overflow-x:auto;}
+.filter{padding:8px 14px;border-radius:999px;border:none;background:var(--gold-soft);font-weight:600;font-size:.8rem;cursor:pointer;white-space:nowrap;}
+.filter.active{background:var(--gold);color:#fff;}
+.container{padding:0 24px 40px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;max-width:1400px;margin:0 auto;}
+.card{background:#fff;border:1px solid var(--gold-light);border-radius:var(--r);box-shadow:var(--sh);padding:16px;display:flex;flex-direction:column;gap:10px;}
+.card.pending{border-color:var(--gold);}
+.card.approved{border-color:var(--online);}
+.card.ignored{border-color:#f3c6c6;opacity:.75;}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.nick{font-weight:700;font-size:1rem;}
+.badge{font-size:.65rem;font-weight:800;padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.5px;}
+.badge.pending{background:var(--gold-soft);color:#a37c00;border:1px solid var(--gold);}
+.badge.approved{background:#e8f6e8;color:#2f7d32;border:1px solid var(--online);}
+.badge.ignored{background:#fde4e4;color:#b04040;border:1px solid #f3c6c6;}
+.meta{font-size:.78rem;color:var(--text-soft);display:flex;flex-direction:column;gap:4px;word-break:break-all;}
+.meta b{color:var(--text);}
+.proof{max-width:100%;max-height:260px;object-fit:contain;border-radius:10px;border:1px solid var(--gold-light);cursor:zoom-in;background:var(--gold-soft);}
+.actions{display:flex;gap:8px;margin-top:4px;}
+.btn{padding:10px 14px;border-radius:10px;border:none;font-family:inherit;font-weight:700;font-size:.8rem;cursor:pointer;transition:.2s;}
+.btn:active{transform:scale(.97);}
+.btn-approve{background:var(--pastel-green);color:#245c27;}
+.btn-approve:hover{background:#c9dcb5;}
+.btn-ignore{background:#fde4e4;color:#b04040;}
+.btn-ignore:hover{background:#f7d0d0;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:.9rem;padding:40px;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:12px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:.3s;font-size:.85rem;z-index:100;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<!--
+  IMPORTANTE — SEGURANÇA:
+  Esta página é o painel administrativo. Proteja o acesso!
+  Exemplo de regras no Firebase Realtime Database:
+
+  "pulse_requests": {
+    ".read": "auth != null",
+    ".write": "auth != null"
+  }
+
+  O ideal é usar Firebase Authentication com e-mail/senha do admin
+  e regras restringindo leitura/escrita ao UID do administrador.
+-->
+
+<header>
+  <span class="logo">HEZZ</span>
+  <h1>Dashboard PULSE</h1>
+  <span id="auth-status">Conectando...</span>
+</header>
+
+<div class="filters" id="filters">
+  <button class="filter active" data-filter="pending">Pendentes</button>
+  <button class="filter" data-filter="approved">Aprovados</button>
+  <button class="filter" data-filter="ignored">Ignorados</button>
+  <button class="filter" data-filter="all">Todos</button>
+</div>
+
+<div class="container" id="requests"></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBk0TzSvq4T4f27RbCUtHblQxvmkAI0dHE",
+  authDomain: "hezz-gg.firebaseapp.com",
+  databaseURL: "https://hezz-gg-default-rtdb.firebaseio.com",
+  projectId: "hezz-gg",
+  storageBucket: "hezz-gg.firebasestorage.app",
+  messagingSenderId: "944032998353",
+  appId: "1:944032998353:web:e5b079c669c2f6f3a736f0"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getDatabase(app);
+
+const $ = (id) => document.getElementById(id);
+let allRequests = [];
+let currentFilter = 'pending';
+let toastTimer = null;
+
+function showToast(msg){
+  $("toast").textContent = msg;
+  $("toast").classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $("toast").classList.remove("show"), 2500);
+}
+
+signInAnonymously(auth).catch(err => {
+  $("auth-status").textContent = "Erro no Auth: " + (err.code || err.message);
+});
+
+onAuthStateChanged(auth, user => {
+  if (!user) return;
+  $("auth-status").textContent = "Conectado";
+  subscribeRequests();
+});
+
+function subscribeRequests(){
+  onValue(ref(db, "pulse_requests"), snap => {
+    const val = snap.val() || {};
+    allRequests = Object.entries(val).map(([key, v]) => ({ key, ...v }))
+      .sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+    render();
+  }, err => {
+    $("auth-status").textContent = "Erro ao ler: " + err.message;
+  });
+}
+
+function render(){
+  const container = $("requests");
+  container.innerHTML = "";
+
+  const list = (currentFilter === 'all')
+    ? allRequests
+    : allRequests.filter(r => (r.status || 'pending') === currentFilter);
+
+  if (!list.length) {
+    container.innerHTML = '<div class="empty">Nenhum pedido nesta categoria.</div>';
+    return;
+  }
+
+  list.forEach(r => {
+    const status = r.status || 'pending';
+    const card = document.createElement('div');
+    card.className = 'card ' + status;
+
+    const date = r.createdAt ? new Date(r.createdAt).toLocaleString() : '—';
+
+    card.innerHTML = `
+      <div class="card-head">
+        <span class="nick">${escapeHTML(r.nick || 'Anônimo')}</span>
+        <span class="badge ${status}">${status}</span>
+      </div>
+      <div class="meta">
+        <span>ID: <b>${escapeHTML(r.uid || '—')}</b></span>
+        <span>Plano: <b>${escapeHTML(r.plan || 'pulse')}</b> • Valor: <b>R$ ${Number(r.amount || 5).toFixed(2)}</b></span>
+        <span>Data: <b>${date}</b></span>
+      </div>
+      ${r.proofUrl ? `<img class="proof" src="${r.proofUrl}" alt="Comprovante" onclick="window.open(this.src,'_blank')">` : '<div class="meta">Sem comprovante</div>'}
+      <div class="actions">
+        <button class="btn btn-approve" ${status !== 'pending' ? 'disabled' : ''} data-action="approve">Aprovar</button>
+        <button class="btn btn-ignore" ${status !== 'pending' ? 'disabled' : ''} data-action="ignore">Ignorar</button>
+      </div>
+    `;
+
+    const approveBtn = card.querySelector('[data-action="approve"]');
+    const ignoreBtn  = card.querySelector('[data-action="ignore"]');
+    if (approveBtn) approveBtn.addEventListener('click', () => approve(r));
+    if (ignoreBtn)  ignoreBtn.addEventListener('click', () => ignore(r));
+
+    container.appendChild(card);
+  });
+}
+
+async function approve(r){
+  if (!confirm(`Aprovar PULSE para ${r.nick || r.uid}?`)) return;
+  try {
+    const updates = {};
+    updates[`pulse_requests/${r.key}/status`] = 'approved';
+    updates[`pulse_requests/${r.key}/reviewedAt`] = Date.now();
+    updates[`users/${r.uid}/plan`] = 'pulse';
+    updates[`users/${r.uid}/planSince`] = Date.now();
+    updates[`users/${r.uid}/pulsePending`] = false;
+    await update(ref(db), updates);
+    showToast("PULSE aprovado para " + (r.nick || r.uid));
+  } catch (err) {
+    showToast("Erro ao aprovar: " + err.message);
+  }
+}
+
+async function ignore(r){
+  if (!confirm(`Ignorar o pedido de ${r.nick || r.uid}?`)) return;
+  try {
+    const updates = {};
+    updates[`pulse_requests/${r.key}/status`] = 'ignored';
+    updates[`pulse_requests/${r.key}/reviewedAt`] = Date.now();
+    updates[`users/${r.uid}/pulsePending`] = false;
+    await update(ref(db), updates);
+    showToast("Pedido ignorado");
+  } catch (err) {
+    showToast("Erro ao ignorar: " + err.message);
+  }
+}
+
+function escapeHTML(str){
+  return String(str ?? '').replace(/[&<>'"]/g, t => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'
+  }[t]));
+}
+
+document.querySelectorAll('#filters .filter').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#filters .filter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    render();
+  });
+});
+</script>
+</body>
+</html>
