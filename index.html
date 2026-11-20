@@ -9,12 +9,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{
-  --white:#fff; --gold:#e8b923; --gold-light:#fdeaa8; --gold-soft:#fffaeb;
-  --pastel-blue:#d6e4f0; --pastel-green:#d9ead3; --text:#2b2b2b; --text-soft:#6a6a6a;
-  --muted:#9a9a9a; --danger:#e26a6a; --online:#7bc47f;
-  --r:14px; --sh:0 8px 24px rgba(0,0,0,.08);
-}
+:root{--gold:#e8b923;--gold-light:#fdeaa8;--gold-soft:#fffaeb;--pastel-blue:#d6e4f0;--pastel-green:#d9ead3;
+  --text:#2b2b2b;--text-soft:#6a6a6a;--muted:#9a9a9a;--danger:#e26a6a;--online:#7bc47f;--r:14px;--sh:0 8px 24px rgba(0,0,0,.08);}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(135deg,var(--pastel-blue),#fff 45%,var(--gold-soft));min-height:100vh;color:var(--text);}
 header{display:flex;align-items:center;gap:14px;padding:20px 24px;border-bottom:1px solid var(--gold-light);background:rgba(255,255,255,.85);backdrop-filter:blur(8px);position:sticky;top:0;z-index:10;}
@@ -42,50 +38,51 @@ header h1{font-size:1rem;font-weight:700;flex:1;}
 .btn{padding:10px 14px;border-radius:10px;border:none;font-family:inherit;font-weight:700;font-size:.8rem;cursor:pointer;transition:.2s;}
 .btn:active{transform:scale(.97);}
 .btn-approve{background:var(--pastel-green);color:#245c27;}
-.btn-approve:hover{background:#c9dcb5;}
 .btn-ignore{background:#fde4e4;color:#b04040;}
-.btn-ignore:hover{background:#f7d0d0;}
 .btn:disabled{opacity:.5;cursor:not-allowed;}
 .empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:.9rem;padding:40px;}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:12px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:.3s;font-size:.85rem;z-index:100;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#login-screen{max-width:360px;margin:80px auto;background:#fff;border:1px solid var(--gold-light);border-radius:var(--r);box-shadow:var(--sh);padding:24px;display:flex;flex-direction:column;gap:12px;}
+#login-screen h2{font-size:1.1rem;text-align:center;}
+#login-screen input{padding:12px;border:2px solid var(--gold-light);border-radius:10px;font-family:inherit;font-size:.9rem;outline:none;}
+#login-screen input:focus{border-color:var(--gold);background:var(--gold-soft);}
+#login-screen button{padding:12px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-weight:700;cursor:pointer;}
+#login-screen .err{font-size:.75rem;color:var(--danger);text-align:center;min-height:1em;}
+#app{display:none;}
 </style>
 </head>
 <body>
 
-<!--
-  IMPORTANTE — SEGURANÇA:
-  Esta página é o painel administrativo. Proteja o acesso!
-  Exemplo de regras no Firebase Realtime Database:
-
-  "pulse_requests": {
-    ".read": "auth != null",
-    ".write": "auth != null"
-  }
-
-  O ideal é usar Firebase Authentication com e-mail/senha do admin
-  e regras restringindo leitura/escrita ao UID do administrador.
--->
-
 <header>
   <span class="logo">HEZZ</span>
   <h1>Dashboard PULSE</h1>
-  <span id="auth-status">Conectando...</span>
+  <span id="auth-status">Desconectado</span>
 </header>
 
-<div class="filters" id="filters">
-  <button class="filter active" data-filter="pending">Pendentes</button>
-  <button class="filter" data-filter="approved">Aprovados</button>
-  <button class="filter" data-filter="ignored">Ignorados</button>
-  <button class="filter" data-filter="all">Todos</button>
+<div id="login-screen">
+  <h2>Login do Administrador</h2>
+  <input id="admin-email" type="email" placeholder="E-mail admin" value="sampteken@gmail.com">
+  <input id="admin-pass" type="password" placeholder="Senha">
+  <button id="btn-login">Entrar</button>
+  <div class="err" id="login-err"></div>
 </div>
 
-<div class="container" id="requests"></div>
+<div id="app">
+  <div class="filters" id="filters">
+    <button class="filter active" data-filter="pending">Pendentes</button>
+    <button class="filter" data-filter="approved">Aprovados</button>
+    <button class="filter" data-filter="ignored">Ignorados</button>
+    <button class="filter" data-filter="all">Todos</button>
+  </div>
+  <div class="container" id="requests"></div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const firebaseConfig = {
@@ -98,14 +95,15 @@ const firebaseConfig = {
   appId: "1:944032998353:web:e5b079c669c2f6f3a736f0"
 };
 
-const app  = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db   = getDatabase(app);
+const db = getDatabase(app);
 
 const $ = (id) => document.getElementById(id);
 let allRequests = [];
 let currentFilter = 'pending';
 let toastTimer = null;
+let reqUnsub = null;
 
 function showToast(msg){
   $("toast").textContent = msg;
@@ -114,24 +112,40 @@ function showToast(msg){
   toastTimer = setTimeout(() => $("toast").classList.remove("show"), 2500);
 }
 
-signInAnonymously(auth).catch(err => {
-  $("auth-status").textContent = "Erro no Auth: " + (err.code || err.message);
+$("btn-login").addEventListener("click", async () => {
+  const email = $("admin-email").value.trim();
+  const pass  = $("admin-pass").value;
+  $("login-err").textContent = "";
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch (err) {
+    $("login-err").textContent = err.code || err.message;
+  }
 });
 
 onAuthStateChanged(auth, user => {
-  if (!user) return;
-  $("auth-status").textContent = "Conectado";
-  subscribeRequests();
+  if (user) {
+    $("login-screen").style.display = "none";
+    $("app").style.display = "block";
+    $("auth-status").textContent = "Conectado: " + (user.email || user.uid);
+    subscribeRequests();
+  } else {
+    $("login-screen").style.display = "flex";
+    $("app").style.display = "none";
+    $("auth-status").textContent = "Desconectado";
+    if (reqUnsub) { reqUnsub(); reqUnsub = null; }
+  }
 });
 
 function subscribeRequests(){
-  onValue(ref(db, "pulse_requests"), snap => {
+  if (reqUnsub) reqUnsub();
+  reqUnsub = onValue(ref(db, "pulse_requests"), snap => {
     const val = snap.val() || {};
     allRequests = Object.entries(val).map(([key, v]) => ({ key, ...v }))
       .sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
     render();
   }, err => {
-    $("auth-status").textContent = "Erro ao ler: " + err.message;
+    $("auth-status").textContent = "Erro: " + err.message;
   });
 }
 
@@ -139,8 +153,7 @@ function render(){
   const container = $("requests");
   container.innerHTML = "";
 
-  const list = (currentFilter === 'all')
-    ? allRequests
+  const list = (currentFilter === 'all') ? allRequests
     : allRequests.filter(r => (r.status || 'pending') === currentFilter);
 
   if (!list.length) {
@@ -152,7 +165,6 @@ function render(){
     const status = r.status || 'pending';
     const card = document.createElement('div');
     card.className = 'card ' + status;
-
     const date = r.createdAt ? new Date(r.createdAt).toLocaleString() : '—';
 
     card.innerHTML = `
@@ -161,8 +173,9 @@ function render(){
         <span class="badge ${status}">${status}</span>
       </div>
       <div class="meta">
-        <span>ID: <b>${escapeHTML(r.uid || '—')}</b></span>
-        <span>Plano: <b>${escapeHTML(r.plan || 'pulse')}</b> • Valor: <b>R$ ${Number(r.amount || 5).toFixed(2)}</b></span>
+        <span>Nome do pagador: <b>${escapeHTML(r.buyerName || '—')}</b></span>
+        <span>ID usuário: <b>${escapeHTML(r.uid || '—')}</b></span>
+        <span>Plano: <b>${escapeHTML(r.plan || 'pulse')}</b> • Valor: <b>R$ ${Number(r.amount || 5).toFixed(2).replace('.', ',')}</b></span>
         <span>Data: <b>${date}</b></span>
       </div>
       ${r.proofUrl ? `<img class="proof" src="${r.proofUrl}" alt="Comprovante" onclick="window.open(this.src,'_blank')">` : '<div class="meta">Sem comprovante</div>'}
@@ -172,11 +185,8 @@ function render(){
       </div>
     `;
 
-    const approveBtn = card.querySelector('[data-action="approve"]');
-    const ignoreBtn  = card.querySelector('[data-action="ignore"]');
-    if (approveBtn) approveBtn.addEventListener('click', () => approve(r));
-    if (ignoreBtn)  ignoreBtn.addEventListener('click', () => ignore(r));
-
+    card.querySelector('[data-action="approve"]').addEventListener('click', () => approve(r));
+    card.querySelector('[data-action="ignore"]').addEventListener('click', () => ignore(r));
     container.appendChild(card);
   });
 }
