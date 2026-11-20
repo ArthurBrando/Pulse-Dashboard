@@ -17,32 +17,35 @@ header{display:flex;align-items:center;gap:14px;padding:20px 24px;border-bottom:
 .logo{font-weight:800;letter-spacing:3px;color:var(--gold);font-size:1.3rem;}
 header h1{font-size:1rem;font-weight:700;flex:1;}
 #auth-status{font-size:.75rem;color:var(--text-soft);}
-.filters{display:flex;gap:8px;padding:16px 24px;overflow-x:auto;}
+#btn-logout{display:none;padding:6px 12px;border-radius:8px;border:1px solid var(--gold-light);background:#fff;font-family:inherit;font-size:.75rem;font-weight:600;cursor:pointer;color:var(--text);}
+.filters{display:flex;gap:8px;padding:16px 24px;overflow-x:auto;align-items:center;flex-wrap:wrap;}
 .filter{padding:8px 14px;border-radius:999px;border:none;background:var(--gold-soft);font-weight:600;font-size:.8rem;cursor:pointer;white-space:nowrap;}
 .filter.active{background:var(--gold);color:#fff;}
+.revoke-bar{display:flex;gap:8px;padding:0 24px 16px;max-width:520px;}
+.revoke-bar input{flex:1;padding:10px 12px;border:2px solid var(--gold-light);border-radius:10px;font-family:inherit;font-size:.82rem;outline:none;background:#fff;}
+.revoke-bar input:focus{border-color:var(--gold);background:var(--gold-soft);}
 .container{padding:0 24px 40px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;max-width:1400px;margin:0 auto;}
 .card{background:#fff;border:1px solid var(--gold-light);border-radius:var(--r);box-shadow:var(--sh);padding:16px;display:flex;flex-direction:column;gap:10px;}
 .card.pending{border-color:var(--gold);}
 .card.approved{border-color:var(--online);}
-.card.revoked{border-color:#f3c6c6;opacity:.75;}
-.card.ignored{border-color:#f3c6c6;opacity:.75;}
+.card.ignored,.card.revoked{border-color:#f3c6c6;opacity:.8;}
 .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
 .nick{font-weight:700;font-size:1rem;}
+.badges{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
 .badge{font-size:.65rem;font-weight:800;padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.5px;}
 .badge.pending{background:var(--gold-soft);color:#a37c00;border:1px solid var(--gold);}
 .badge.approved{background:#e8f6e8;color:#2f7d32;border:1px solid var(--online);}
-.badge.ignored{background:#fde4e4;color:#b04040;border:1px solid #f3c6c6;}
+.badge.ignored,.badge.revoked,.badge.type-revoke{background:#fde4e4;color:#b04040;border:1px solid #f3c6c6;}
+.badge.type-sub{background:#eef4fb;color:#2c5282;border:1px solid #cbdcf0;}
 .meta{font-size:.78rem;color:var(--text-soft);display:flex;flex-direction:column;gap:4px;word-break:break-all;}
 .meta b{color:var(--text);}
 .proof{max-width:100%;max-height:260px;object-fit:contain;border-radius:10px;border:1px solid var(--gold-light);cursor:zoom-in;background:var(--gold-soft);}
-.actions{display:flex;gap:8px;margin-top:4px;}
+.actions{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;}
 .btn{padding:10px 14px;border-radius:10px;border:none;font-family:inherit;font-weight:700;font-size:.8rem;cursor:pointer;transition:.2s;}
 .btn:active{transform:scale(.97);}
 .btn-approve{background:var(--pastel-green);color:#245c27;}
-.btn-revoke{background:#fde4e4;color:#b04040;}
-.badge.revoked{background:#fde4e4;color:#b04040;border:1px solid #f3c6c6;}
-.badge.revoke{background:#fff0e0;color:#a35a00;border:1px solid #e8a023;}
 .btn-ignore{background:#fde4e4;color:#b04040;}
+.btn-revoke{background:#e26a6a;color:#fff;}
 .btn:disabled{opacity:.5;cursor:not-allowed;}
 .empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:.9rem;padding:40px;}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:12px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:.3s;font-size:.85rem;z-index:100;}
@@ -62,6 +65,7 @@ header h1{font-size:1rem;font-weight:700;flex:1;}
   <span class="logo">HEZZ</span>
   <h1>Dashboard PULSE</h1>
   <span id="auth-status">Desconectado</span>
+  <button id="btn-logout">Sair</button>
 </header>
 
 <div id="login-screen">
@@ -76,10 +80,16 @@ header h1{font-size:1rem;font-weight:700;flex:1;}
   <div class="filters" id="filters">
     <button class="filter active" data-filter="pending">Pendentes</button>
     <button class="filter" data-filter="approved">Aprovados</button>
-    <button class="filter" data-filter="ignored">Ignorados</button>
     <button class="filter" data-filter="revoked">Revogados</button>
+    <button class="filter" data-filter="ignored">Ignorados</button>
     <button class="filter" data-filter="all">Todos</button>
   </div>
+
+  <div class="revoke-bar">
+    <input id="revoke-uid-input" type="text" placeholder="Revogar PULSE diretamente por ID do usuário (UID)">
+    <button class="btn btn-revoke" id="btn-revoke-uid">Revogar por ID</button>
+  </div>
+
   <div class="container" id="requests"></div>
 </div>
 
@@ -128,15 +138,19 @@ $("btn-login").addEventListener("click", async () => {
   }
 });
 
+$("btn-logout").addEventListener("click", () => signOut(auth));
+
 onAuthStateChanged(auth, user => {
   if (user) {
     $("login-screen").style.display = "none";
     $("app").style.display = "block";
+    $("btn-logout").style.display = "inline-block";
     $("auth-status").textContent = "Conectado: " + (user.email || user.uid);
     subscribeRequests();
   } else {
     $("login-screen").style.display = "flex";
     $("app").style.display = "none";
+    $("btn-logout").style.display = "none";
     $("auth-status").textContent = "Desconectado";
     if (reqUnsub) { reqUnsub(); reqUnsub = null; }
   }
@@ -168,39 +182,62 @@ function render(){
 
   list.forEach(r => {
     const status = r.status || 'pending';
+    const isRevokeReq = r.type === 'revoke';
     const card = document.createElement('div');
     card.className = 'card ' + status;
     const date = r.createdAt ? new Date(r.createdAt).toLocaleString() : '—';
 
+    const statusLabel = {
+      pending: 'Pendente',
+      approved: 'Aprovado',
+      revoked: 'Revogado',
+      ignored: 'Ignorado'
+    }[status] || status;
+
+    let actionsHtml = '';
+    if (status === 'pending') {
+      actionsHtml = `
+        <button class="btn ${isRevokeReq ? 'btn-revoke' : 'btn-approve'}" data-action="approve">
+          ${isRevokeReq ? 'Confirmar Revogação' : 'Aprovar'}
+        </button>
+        <button class="btn btn-ignore" data-action="ignore">Ignorar</button>
+      `;
+    } else if (status === 'approved' && !isRevokeReq) {
+      actionsHtml = `
+        <button class="btn btn-revoke" data-action="revoke">Revogar assinatura</button>
+      `;
+    }
+
     card.innerHTML = `
       <div class="card-head">
         <span class="nick">${escapeHTML(r.nick || 'Anônimo')}</span>
-        <span class="badge ${status}">${status}</span>${r.type === 'revoke' ? '<span class="badge revoke">revogação</span>' : ''}
+        <div class="badges">
+          <span class="badge ${isRevokeReq ? 'type-revoke' : 'type-sub'}">${isRevokeReq ? 'Revogação' : 'Assinatura'}</span>
+          <span class="badge ${status}">${statusLabel}</span>
+        </div>
       </div>
       <div class="meta">
-        <span>Nome do pagador: <b>${escapeHTML(r.buyerName || '—')}</b></span>
+        ${!isRevokeReq ? `<span>Nome do pagador: <b>${escapeHTML(r.buyerName || '—')}</b></span>` : ''}
         <span>ID usuário: <b>${escapeHTML(r.uid || '—')}</b></span>
-        <span>Plano: <b>${escapeHTML(r.plan || 'pulse')}</b> • Valor: <b>R$ ${Number(r.amount || 5).toFixed(2).replace('.', ',')}</b></span>
+        <span>Plano: <b>${escapeHTML(r.plan || 'pulse')}</b>${!isRevokeReq ? ` • Valor: <b>R$ ${Number(r.amount || 5).toFixed(2).replace('.', ',')}</b>` : ''}</span>
         <span>Data: <b>${date}</b></span>
       </div>
-      ${r.proofUrl ? `<img class="proof" src="${r.proofUrl}" alt="Comprovante" onclick="window.open(this.src,'_blank')">` : '<div class="meta">Sem comprovante</div>'}
-      <div class="actions">
-        <button class="btn btn-approve" ${status !== 'pending' ? 'disabled' : ''} data-action="approve">${r.type === 'revoke' ? 'Aprovar revogação' : 'Aprovar'}</button>
-        <button class="btn btn-ignore" ${status !== 'pending' ? 'disabled' : ''} data-action="ignore">Ignorar</button>
-        ${(status === 'approved' && r.type !== 'revoke') ? '<button class="btn btn-revoke" data-action="revoke">Revogar PULSE</button>' : ''}
-      </div>
+      ${!isRevokeReq ? (r.proofUrl ? `<img class="proof" src="${r.proofUrl}" alt="Comprovante" onclick="window.open(this.src,'_blank')">` : '<div class="meta">Sem comprovante</div>') : ''}
+      ${actionsHtml ? `<div class="actions">${actionsHtml}</div>` : ''}
     `;
 
-    card.querySelector('[data-action="approve"]').addEventListener('click', () => approve(r));
-    card.querySelector('[data-action="ignore"]').addEventListener('click', () => ignore(r));
-    const rb = card.querySelector('[data-action="revoke"]');
-    if (rb) rb.addEventListener('click', () => revoke(r));
+    const appBtn = card.querySelector('[data-action="approve"]');
+    const ignBtn = card.querySelector('[data-action="ignore"]');
+    const revBtn = card.querySelector('[data-action="revoke"]');
+    if (appBtn) appBtn.addEventListener('click', () => isRevokeReq ? approveRevokeRequest(r) : approve(r));
+    if (ignBtn) ignBtn.addEventListener('click', () => ignore(r));
+    if (revBtn) revBtn.addEventListener('click', () => revokeSubscription(r));
+
     container.appendChild(card);
   });
 }
 
 async function approve(r){
-  if (r.type === 'revoke') return revoke(r, true);
   if (!confirm(`Aprovar PULSE para ${r.nick || r.uid}?`)) return;
   try {
     const updates = {};
@@ -209,6 +246,7 @@ async function approve(r){
     updates[`users/${r.uid}/plan`] = 'pulse';
     updates[`users/${r.uid}/planSince`] = Date.now();
     updates[`users/${r.uid}/pulsePending`] = false;
+    updates[`users/${r.uid}/revokePending`] = false;
     await update(ref(db), updates);
     showToast("PULSE aprovado para " + (r.nick || r.uid));
   } catch (err) {
@@ -216,19 +254,72 @@ async function approve(r){
   }
 }
 
-async function revoke(r, fromRequest){
-  if (!confirm(`Revogar o PULSE de ${r.nick || r.uid}?`)) return;
+async function approveRevokeRequest(r){
+  if (!confirm(`Confirmar revogação da assinatura PULSE de ${r.nick || r.uid}?`)) return;
   try {
+    const now = Date.now();
     const updates = {};
-    updates[`pulse_requests/${r.key}/status`] = fromRequest ? 'approved' : 'revoked';
-    updates[`pulse_requests/${r.key}/reviewedAt`] = Date.now();
+    updates[`pulse_requests/${r.key}/status`] = 'revoked';
+    updates[`pulse_requests/${r.key}/reviewedAt`] = now;
+    allRequests.forEach(item => {
+      if (item.uid === r.uid && item.status === 'approved' && item.type !== 'revoke') {
+        updates[`pulse_requests/${item.key}/status`] = 'revoked';
+        updates[`pulse_requests/${item.key}/revokedAt`] = now;
+      }
+    });
     updates[`users/${r.uid}/plan`] = 'free';
     updates[`users/${r.uid}/planSince`] = null;
+    updates[`users/${r.uid}/pulsePending`] = false;
     updates[`users/${r.uid}/revokePending`] = false;
     await update(ref(db), updates);
-    showToast("PULSE revogado de " + (r.nick || r.uid));
-  } catch (err) { showToast("Erro ao revogar: " + err.message); }
+    showToast("Assinatura revogada para " + (r.nick || r.uid));
+  } catch (err) {
+    showToast("Erro ao revogar: " + err.message);
+  }
 }
+
+async function revokeSubscription(r){
+  if (!confirm(`Revogar a assinatura PULSE de ${r.nick || r.uid}?`)) return;
+  try {
+    const now = Date.now();
+    const updates = {};
+    updates[`pulse_requests/${r.key}/status`] = 'revoked';
+    updates[`pulse_requests/${r.key}/revokedAt`] = now;
+    updates[`users/${r.uid}/plan`] = 'free';
+    updates[`users/${r.uid}/planSince`] = null;
+    updates[`users/${r.uid}/pulsePending`] = false;
+    updates[`users/${r.uid}/revokePending`] = false;
+    await update(ref(db), updates);
+    showToast("Assinatura revogada para " + (r.nick || r.uid));
+  } catch (err) {
+    showToast("Erro ao revogar: " + err.message);
+  }
+}
+
+$("btn-revoke-uid").addEventListener("click", async () => {
+  const uid = $("revoke-uid-input").value.trim();
+  if (!uid) { showToast("Informe o ID (UID) do usuário"); return; }
+  if (!confirm(`Revogar assinatura PULSE do usuário ${uid}?`)) return;
+  try {
+    const now = Date.now();
+    const updates = {};
+    updates[`users/${uid}/plan`] = 'free';
+    updates[`users/${uid}/planSince`] = null;
+    updates[`users/${uid}/pulsePending`] = false;
+    updates[`users/${uid}/revokePending`] = false;
+    allRequests.forEach(item => {
+      if (item.uid === uid && (item.status === 'approved' || (item.status === 'pending' && item.type === 'revoke'))) {
+        updates[`pulse_requests/${item.key}/status`] = 'revoked';
+        updates[`pulse_requests/${item.key}/revokedAt`] = now;
+      }
+    });
+    await update(ref(db), updates);
+    $("revoke-uid-input").value = "";
+    showToast("Assinatura PULSE revogada!");
+  } catch (err) {
+    showToast("Erro ao revogar: " + err.message);
+  }
+});
 
 async function ignore(r){
   if (!confirm(`Ignorar o pedido de ${r.nick || r.uid}?`)) return;
